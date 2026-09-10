@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Single-file NVIDIA cloud chat client.
+"""buzz agent — single-file NVIDIA cloud chat client.
 
 Reads your NVIDIA API key from $NVIDIA_API_KEY or ~/.config/nvidia/api.key
 so no key ever ends up in the repo.
 
 Usage:
-    nvidia-chat "your question"
-    NVIDIA_MODEL=... NVIDIA_TEMP=0.2 nvidia-chat "coding question"
+    buzz-chat "your question"
+    NVIDIA_MODEL=... NVIDIA_TEMP=0.2 buzz-chat "coding question"
 """
 
 import os

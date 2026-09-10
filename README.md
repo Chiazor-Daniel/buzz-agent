@@ -1,42 +1,47 @@
-# pi-nvidia-agent
+# buzz agent
 
-Run the [pi coding agent](https://pi.dev) on **NVIDIA's free cloud models** — no local GPU, no paid API, no server. Just a Linux box and a free NVIDIA key, and you get a full coding agent that works out of the box.
+Your personal AI coding agent on **NVIDIA's free cloud models** — no local GPU, no paid API, no server. Just a Linux box and a free NVIDIA key, and you get a coding agent that actually *works* on your projects, out of the box.
 
-Uses **NVIDIA Nemotron Lightning** (`nemotron-3.5-lightning-30b-a3b`) for fast answers and **Nemotron Ultra** (`nemotron-3-ultra-550b-a55b`) for heavier coding tasks — both served free by NVIDIA's NIM cloud.
+Powered by the [pi coding agent](https://pi.dev) runtime, backed by:
+
+- **NVIDIA Nemotron Lightning** (`nemotron-3.5-lightning-30b-a3b`) — fast, daily driver
+- **NVIDIA Nemotron Ultra** (`nemotron-3-ultra-550b-a55b`) — heavy lifting
+
+Both served free by NVIDIA's NIM cloud.
 
 ## What you get
 
 | Command | Uses | Good for |
 |---|---|---|
-| `pi-nvidia` | Nemotron Lightning (30B) | everyday coding, fast answers |
-| `pi-nvidia-code` | Nemotron Ultra (550B) | hard problems, big refactors |
-| `nvidia-chat "..."` | Lightning (default) | quick one-off prompts without the agent |
+| `buzz` | Nemotron Lightning (30B) | everyday coding, fast answers |
+| `buzz-code` | Nemotron Ultra (550B) | hard problems, big refactors |
+| `buzz-chat "..."` | Lightning (default) | quick one-off prompts, no agent overhead |
 | `bin/nvidia-proxy` | any NVIDIA model | local OpenAI-compatible endpoint (`localhost:8888`) for tools that speak OpenAI |
 
-The `pi` agent has real tools: read, bash, edit, write files — so it can actually work on your projects, not just chat.
+The agent has real tools: **read, bash, edit, write** — so it can work on your code, not just chat.
 
 ## Quick start (3 steps)
 
 ```bash
-git clone https://github.com/Chiazor-Daniel/pi-nvidia-agent
-cd pi-nvidia-agent
+git clone https://github.com/Chiazor-Daniel/buzz-agent
+cd buzz-agent
 ./setup.sh
 ```
 
 setup.sh will:
 1. Install Node.js if missing
 2. `npm install -g @earendil-works/pi-coding-agent`
-3. Copy the `pi-nvidia*` scripts into `~/bin`
+3. Copy `buzz`, `buzz-code`, `buzz-chat` into `~/bin`
 4. Ask for your **free** NVIDIA API key and save it to `~/.config/nvidia/api.key` (mode 600)
 
 Then (new terminal):
 
 ```bash
-pi-nvidia "write a python script that prints a fibonacci sequence"
+buzz "write a python script that prints a fibonacci sequence"
 
-pi-nvidia-code "review the auth code in ./src and find security issues"
+buzz-code "review the auth code in ./src and find security issues"
 
-nvidia-chat "what is a TLS handshake?"
+buzz-chat "what is a TLS handshake?"
 ```
 
 ## Getting the FREE API key
@@ -77,7 +82,7 @@ curl http://127.0.0.1:8888/v1/models
 Every script reads env vars, so you can override without editing anything:
 
 ```bash
-NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b" nvidia-chat "hi"
+NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b" buzz-chat "hi"
 pi --provider nvidia --model "nvidia/nemotron-3.5-lightning-30b-a3b" "question"
 ```
 
@@ -91,14 +96,14 @@ Browse all free model IDs at build.nvidia.com (copy any model's API code — the
 
 ## Troubleshooting
 
-**`pi: command not found`**
-Reopen your terminal (npm global bin may need PATH refresh): `npm prefix -g` → add its `/bin` to PATH.
+**`buzz: command not found`**
+Reopen your terminal (npm global bin may need PATH refresh): `npm prefix -g` → add its `/bin` to PATH. Also confirm `setup.sh` copied the scripts to `~/bin` and `~/bin` is on PATH.
 
 **`401` / `Unauthorized`**
-Check the key: `head -c 20 ~/.config/nvidia/api.key` (should start `nvapi-`) and that there's no trailing newline issue. Regenerate if needed.
+Check the key: `head -c 20 ~/.config/nvidia/api.key` (should start `nvapi-`) and that there's no trailing-newline issue. Regenerate if needed.
 
 **Rate limited**
-Free tier caps requests/minute. Wait a bit or switch to a heavier/smaller model.
+Free tier caps requests/minute. Wait a bit or switch models.
 
 **`pi` says "no provider"**
 Run with explicit flags: `pi --provider nvidia --model nvidia/nemotron-3.5-lightning-30b-a3b`

@@ -4,7 +4,7 @@ set -euo pipefail
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
 
-echo -e "${GREEN}==> pi-nvidia-agent setup${NC}"
+echo -e "${GREEN}==> buzz agent setup${NC}"
 
 # 1. Node.js (required by pi)
 if ! command -v node >/dev/null 2>&1; then
@@ -28,7 +28,7 @@ fi
 # 3. Copy scripts into ~/bin
 mkdir -p "$HOME/bin"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for f in pi-nvidia pi-nvidia-code nvidia-chat; do
+for f in buzz buzz-code buzz-chat; do
   cp "$SCRIPT_DIR/bin/$f" "$HOME/bin/$f"
   chmod +x "$HOME/bin/$f"
 done
