@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# buzz agent — NVIDIA Nemotron Ultra backend (heavy coding tasks).
-# Auto-starts the key-hiding proxy if needed, then runs pi.
+# buzz agent — heavyweight on NVIDIA Nemotron Ultra (free cloud).
 set -euo pipefail
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib-pi
 . "$SELF/lib-pi"
+export BUZZ_ENGINE="NVIDIA Nemotron Ultra 550B"
+show_banner
 ensure_proxy
 exec pi --provider nvidia --model "nvidia/nemotron-3-ultra-550b-a55b" "$@"

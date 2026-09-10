@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# buzz agent — free NVIDIA Nemotron Lightning backend (daily driver).
-# Auto-starts the key-hiding proxy if needed, then runs pi.
+# buzz agent — daily driver on NVIDIA Nemotron Lightning (free cloud).
 set -euo pipefail
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib-pi
 . "$SELF/lib-pi"
+export BUZZ_ENGINE="NVIDIA Nemotron Lightning 30B"
+show_banner
 ensure_proxy
 exec pi --provider nvidia --model "nvidia/nemotron-3.5-lightning-30b-a3b" "$@"

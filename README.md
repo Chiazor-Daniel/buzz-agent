@@ -1,24 +1,49 @@
 # buzz agent
 
-Your personal AI coding agent on **NVIDIA's free cloud models** — no local GPU, no paid API, no server. Just a Linux box and a free NVIDIA key, and you get a coding agent that actually *works* on your projects, out of the box.
+Your personal **AI coding agent** on NVIDIA's free cloud — reads your code, writes files, runs commands, fixes bugs, reviews PRs, and refactors whole projects. No local GPU, no paid API, no infra. Just a Linux box + one free key.
 
-Powered by the [pi coding agent](https://pi.dev) runtime, backed by:
+```
+  ██████╗ ██╗   ██╗███████╗███████╗
+  ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝   your AI coding agent
+  ██████╔╝██║   ██║  ███╔╝   ███╔╝     engine: NVIDIA Nemotron
+  ██╔══██╗██║   ██║ ███╔╝   ███╔╝      tools: read bash edit write
+  ██████╔╝╚██████╔╝███████╗███████╗
+  ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
+```
 
-- **NVIDIA Nemotron Lightning** (`nemotron-3.5-lightning-30b-a3b`) — fast, daily driver
+Built on the [pi coding agent](https://pi.dev) runtime, backed by:
+
+- **NVIDIA Nemotron Lightning** (`nemotron-3.5-lightning-30b-a3b`) — fast daily driver
 - **NVIDIA Nemotron Ultra** (`nemotron-3-ultra-550b-a55b`) — heavy lifting
 
-Both served free by NVIDIA's NIM cloud.
+Both served by NVIDIA's free NIM cloud.
 
 ## What you get
 
+It's a full coding agent, not a chatbot. Give it a goal; it works until the task is done.
+
 | Command | Uses | Good for |
 |---|---|---|
-| `buzz` | Nemotron Lightning (30B) | everyday coding, fast answers |
+| `buzz` | Nemotron Lightning (30B) | everyday coding, fast iteration |
 | `buzz-code` | Nemotron Ultra (550B) | hard problems, big refactors |
-| `buzz-chat "..."` | Lightning (default) | quick one-off prompts, no agent overhead |
-| `bin/nvidia-proxy` | any NVIDIA model | local OpenAI-compatible endpoint (`localhost:8888`) for tools that speak OpenAI |
+| `buzz-chat "..."` | Lightning (default) | quick answers, no agent overhead |
+| `bin/nvidia-proxy` | any NVIDIA model | OpenAI-compatible endpoint (`localhost:8888`) |
 
-The agent has real tools: **read, bash, edit, write** — so it can work on your code, not just chat.
+### The agent's tools (real work, not chat)
+
+- **read** / **grep** / **find** / **ls** — explores your codebase
+- **edit** / **write** — changes code in your project
+- **bash** — runs commands, builds, tests, git
+
+so you can say:
+
+```bash
+buzz "add dark mode to src/App.css and update the toggle in App.js, then run the test suite"
+buzz-code "./src/auth is a mess — find the security holes, fix them, and write tests"
+buzz "setup a new express + sqlite project in ./blog and scaffold the models, routes, and migrations"
+```
+
+It keeps a **session**, so you can continue a conversation across restarts (`/continue`, `/resume`) and ask follow-ups on the same task. Full interactive terminal UI — themes, colors, inline diffs.
 
 ## Quick start (3 steps)
 
@@ -38,14 +63,14 @@ setup.sh will:
 Then (new terminal):
 
 ```bash
-buzz "write a python script that prints a fibonacci sequence"
+buzz "add an /api/health route to ./server and a test for it"
 
-buzz-code "review the auth code in ./src and find security issues"
+buzz-code "find the performance bottleneck in ./src and fix it"
 
 buzz-chat "what is a TLS handshake?"
 ```
 
-`buzz` and `buzz-code` **auto-start the proxy** on first use (and `setup.sh` can also install it as a background service), so it really is one command — no keys to remember, nothing else to run.
+`buzz` and `buzz-code` **auto-start the proxy** on first use (and `setup.sh` can also install it as a background service), so it really is one command — no keys to remember, nothing else to run. Skip the banner with `BUZZ_NO_BANNER=1`.
 
 ## Getting the FREE API key
 
