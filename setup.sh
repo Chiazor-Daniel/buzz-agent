@@ -24,6 +24,30 @@ fi
 if ! command -v pi >/dev/null 2>&1; then
   echo -e "${YELLOW}Installing pi coding agent...${NC}"
   npm install -g @earendil-works/pi-coding-agent
+else
+  echo "pi coding agent already installed."
+fi
+
+# 2b. Rebrand the installed runtime so every user-facing name is "buzz"
+#     (update prompt now says 'buzz update', window title, changelog, etc.)
+PI_PKG="$(npm root -g)/@earendil-works/pi-coding-agent/package.json"
+if [ -f "$PI_PKG" ]; then
+  python3 - "$PI_PKG" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    data = json.load(f)
+cfg = data.setdefault("piConfig", {})
+if cfg.get("name") != "buzz":
+    cfg["name"] = "buzz"
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    print("Rebranded runtime: APP_NAME -> buzz.")
+else:
+    print("Runtime already rebranded to buzz.")
+PYEOF
+else
+  echo -e "${YELLOW}Warning: could not find pi's package.json for rebrand.${NC}"
 fi
 
 # 3. Python (needed by the proxy)
@@ -80,6 +104,29 @@ print("Pi nvidia provider -> 127.0.0.1:8888 (proxy).")
 PYEOF
 else
   echo -e "${YELLOW}Note: ~/.pi/agent/models.json not found yet. It will be created when you first run 'pi' — if the proxy URL isn't set then, run setup.sh again once.${NC}"
+fi
+
+# 7. Buzz theme (honey/amber TUI + HTML export look) as the default theme
+THEMES_DIR="$HOME/.pi/agent/themes"
+mkdir -p "$THEMES_DIR"
+cp "$SCRIPT_DIR/theme/buzz.json" "$THEMES_DIR/buzz.json"
+echo -e "${GREEN}==> Installed buzz theme${NC}"
+
+PI_SETTINGS="$HOME/.pi/agent/settings.json"
+if [ -f "$PI_SETTINGS" ]; then
+  python3 - "$PI_SETTINGS" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    data = json.load(f)
+if data.get("theme") != "buzz":
+    data["theme"] = "buzz"
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+    print("Default theme set to buzz.")
+PYEOF
+else
+  echo -e "${YELLOW}Note: settings.json not found yet. On first run, type: /theme buzz${NC}"
 fi
 
 echo -e "${GREEN}==> Done! Reopen your terminal (or 'source ~/.profile').${NC}"

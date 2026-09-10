@@ -5,6 +5,12 @@ SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib-pi
 . "$SELF/lib-pi"
 export BUZZ_ENGINE="NVIDIA Nemotron Ultra 550B"
+
+# Manage-the-agent subcommands (buzz update, buzz config, ...)
+if [ $# -gt 0 ] && is_subcommand "$1"; then
+  exec pi "$@"
+fi
+
 show_banner
 ensure_proxy
 exec pi --provider nvidia --model "nvidia/nemotron-3-ultra-550b-a55b" "$@"

@@ -18,6 +18,14 @@ Built on the [pi coding agent](https://pi.dev) runtime, backed by:
 
 Both served by NVIDIA's free NIM cloud.
 
+> ## Screenshots
+>
+> **Terminal (buzz TUI)** — *screenshot coming soon*
+>
+> **Web view (sharable sessions)** — *screenshot coming soon*
+
+The whole thing is rebranded: the window title, the header, and the update prompt all say **buzz** (`buzz update` just updates the engine under the hood), and the terminal ships with a honey-and-amber theme that also colors exported session pages.
+
 ## What you get
 
 It's a full coding agent, not a chatbot. Give it a goal; it works until the task is done.
@@ -55,10 +63,11 @@ cd buzz-agent
 
 setup.sh will:
 1. Install Node.js if missing
-2. `npm install -g @earendil-works/pi-coding-agent`
+2. `npm install -g @earendil-works/pi-coding-agent` and **rebrand it** so every screen says `buzz` (update prompt, titles)
 3. Copy `buzz`, `buzz-code`, `buzz-chat` into `~/bin`
 4. Ask for your **free** NVIDIA API key and save it to `~/.config/nvidia/api.key` (mode 600)
 5. Point pi's `nvidia` provider at your local key-hiding proxy
+6. Install the **buzz theme** (honey/amber TUI + matching exported web pages) as the default
 
 Then (new terminal):
 

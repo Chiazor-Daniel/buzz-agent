@@ -4,6 +4,12 @@ set -euo pipefail
 SELF="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib-pi
 . "$SELF/lib-pi"
+
+# Manage-the-agent subcommands: buzz update, buzz config, buzz list, ...
+if [ $# -gt 0 ] && is_subcommand "$1"; then
+  exec pi "$@"
+fi
+
 export BUZZ_ENGINE="NVIDIA Nemotron Lightning 30B"
 show_banner
 ensure_proxy

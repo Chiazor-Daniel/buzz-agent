@@ -12,6 +12,14 @@ BUZZ_ENGINE="${BUZZ_ENGINE:-NVIDIA Nemotron Lightning}"
 CYAN=$'\033[0;96m'; BOLD=$'\033[1m'; DIM=$'\033[2m'; GREEN=$'\033[0;32m'
 YELLOW=$'\033[0;33m'; RED=$'\033[0;31m'; NC=$'\033[0m'
 
+is_subcommand() {
+  case "${1:-}" in
+    update|install|remove|uninstall|list|config|auth|show|get|set|onboard)
+      return 0 ;;
+  esac
+  return 1
+}
+
 show_banner() {
   [ "${BUZZ_NO_BANNER:-0}" = "1" ] && return 0
   [ -t 1 ] || return 0
