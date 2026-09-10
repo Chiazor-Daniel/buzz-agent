@@ -1,0 +1,3 @@
+#!/bin/bash
+# Run PI with the NVIDIA Nemotron Ultra backend (bigger/smarter model)
+exec pi --provider nvidia --model "nvidia/nemotron-3-ultra-550b-a55b" "$@"

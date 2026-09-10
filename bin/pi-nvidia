@@ -1,0 +1,3 @@
+#!/bin/bash
+# Run PI with the free NVIDIA Nemotron Lightning backend
+exec pi --provider nvidia --model "nvidia/nemotron-3.5-lightning-30b-a3b" "$@"

@@ -1,0 +1,16 @@
+# keys / secrets — NEVER commit
+*.key
+api.key
+*.pem
+**/api.key
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# os / editor
+.DS_Store
+*.swp
+node_modules/

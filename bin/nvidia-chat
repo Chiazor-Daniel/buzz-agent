@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+"""Single-file NVIDIA cloud chat client.
+
+Reads your NVIDIA API key from $NVIDIA_API_KEY or ~/.config/nvidia/api.key
+so no key ever ends up in the repo.
+
+Usage:
+    nvidia-chat "your question"
+    NVIDIA_MODEL=... NVIDIA_TEMP=0.2 nvidia-chat "coding question"
+"""
+
+import os
+import sys
+import json
+import urllib.request
+
+API_KEY_PATH = os.path.expanduser("~/.config/nvidia/api.key")
+
+
+def load_api_key():
+    key = os.environ.get("NVIDIA_API_KEY")
+    if key:
+        return key
+    if os.path.exists(API_KEY_PATH):
+        return open(API_KEY_PATH).read().strip()
+    print("No API key found. Set $NVIDIA_API_KEY or save your key to:")
+    print(f"  {API_KEY_PATH}")
+    sys.exit(1)
+
+
+def main():
+    api_key = load_api_key()
+
+    url = os.environ.get("NVIDIA_API_URL", "https://integrate.api.nvidia.com/v1/chat/completions")
+    model = os.environ.get("NVIDIA_MODEL", "nvidia/nemotron-3.5-lightning-30b-a3b")
+    temperature = float(os.environ.get("NVIDIA_TEMP", "0.7"))
+    max_tokens = int(os.environ.get("NVIDIA_MAX_TOKENS", "1024"))
+
+    if len(sys.argv) < 2:
+        print("Usage: nvidia-chat \"your question here\"")
+        print(f"Model: {model}")
+        sys.exit(1)
+
+    user_input = " ".join(sys.argv[1:])
+
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": "You are a helpful coding and general assistant."},
+            {"role": "user", "content": user_input},
+        ],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+        "stream": False,
+    }
+
+    req = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=120) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            print(data["choices"][0]["message"]["content"])
+    except urllib.error.HTTPError as e:
+        print(f"HTTP Error {e.code}: {e.read().decode('utf-8')}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
