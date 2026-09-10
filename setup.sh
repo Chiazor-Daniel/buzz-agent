@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# One-shot setup: install pi + wire up NVIDIA-backed agent on your Linux box.
+# One-shot setup for the buzz agent on any Linux box.
+# Install: git clone .../buzz-agent && cd buzz-agent && ./setup.sh
 set -euo pipefail
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
@@ -19,32 +20,37 @@ if ! command -v node >/dev/null 2>&1; then
   fi
 fi
 
-# 2. pi (the coding agent CLI)
+# 2. pi (the coding agent runtime)
 if ! command -v pi >/dev/null 2>&1; then
   echo -e "${YELLOW}Installing pi coding agent...${NC}"
   npm install -g @earendil-works/pi-coding-agent
 fi
 
-# 3. Copy scripts into ~/bin
-mkdir -p "$HOME/bin"
+# 3. Python (needed by the proxy)
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "Install python3, then re-run this script."
+  exit 1
+fi
+
+# 4. Copy scripts into ~/bin
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-for f in buzz buzz-code buzz-chat; do
+mkdir -p "$HOME/bin"
+for f in buzz buzz-code buzz-chat lib-pi; do
   cp "$SCRIPT_DIR/bin/$f" "$HOME/bin/$f"
   chmod +x "$HOME/bin/$f"
 done
 mkdir -p "$HOME/bin/nvidia-proxy"
 cp "$SCRIPT_DIR/bin/nvidia-proxy"/* "$HOME/bin/nvidia-proxy/"
-
 echo -e "${GREEN}==> Scripts installed to ~/bin${NC}"
 
-# 4. NVIDIA API key
+# 5. NVIDIA API key
 KEY_FILE="$HOME/.config/nvidia/api.key"
 if [ ! -f "$KEY_FILE" ]; then
   echo -e "${YELLOW}NVIDIA API key not found.${NC}"
   echo "1. Get a FREE key at: https://build.nvidia.com"
-  echo "   (pick any model -> 'Get API Key' -> copy it)"
-  read -r -p "2. Paste your nvapi-... key: " KEY
-  [ -n "$KEY" ] || { echo "No key entered. Aborting (you can re-run)."; exit 1; }
+  echo "   (pick any model -> 'Get API Key' -> copy the nvapi-... value)"
+  read -r -p "2. Paste your key: " KEY
+  [ -n "$KEY" ] || { echo "No key entered. Aborting (re-run when ready)."; exit 1; }
   mkdir -p "$HOME/.config/nvidia"
   printf '%s\n' "$KEY" > "$KEY_FILE"
   chmod 600 "$KEY_FILE"
@@ -53,6 +59,39 @@ else
   echo "Key already present at $KEY_FILE."
 fi
 
-echo -e "${GREEN}==> Re-opening terminal or run 'source ~/.profile' to use them.${NC}"
-echo -e "${GREEN}Try it:${NC} pi-nvidia \"hi, give me a one-line greeting\""
-echo -e "${YELLOW}Note: pi AWS proxy etc. not needed — it talks straight to NVIDIA's free cloud.${NC}"
+# 6. Point pi's nvidia provider at the local key-hiding proxy
+#    The proxy loads the key from ~/.config/nvidia/api.key, so the agent never
+#    needs the key itself ("apiKey: not-used") — no key in env, config, or shell.
+PI_MODELS="$HOME/.pi/agent/models.json"
+if [ -f "$PI_MODELS" ]; then
+  python3 - "$PI_MODELS" <<'PYEOF'
+import json, sys, time
+path = sys.argv[1]
+with open(path) as f:
+    data = json.load(f)
+providers = data.setdefault("providers", {})
+providers.setdefault("nvidia", {})
+providers["nvidia"]["api"] = "openai-completions"
+providers["nvidia"]["apiKey"] = "not-used"
+providers["nvidia"]["baseUrl"] = "http://127.0.0.1:8888/v1"
+with open(path, "w") as f:
+    json.dump(data, f, indent=2, ensure_ascii=False)
+print("Pi nvidia provider -> 127.0.0.1:8888 (proxy).")
+PYEOF
+else
+  echo -e "${YELLOW}Note: ~/.pi/agent/models.json not found yet. It will be created when you first run 'pi' — if the proxy URL isn't set then, run setup.sh again once.${NC}"
+fi
+
+echo -e "${GREEN}==> Done! Reopen your terminal (or 'source ~/.profile').${NC}"
+echo
+echo "Try it:"
+echo "  buzz \"write a one-line hello world\""
+echo "  buzz-code \"review this project for bugs\""
+echo "  buzz-chat \"what is a TLS handshake?\""
+echo
+echo -e "${YELLOW}How it works: your key lives only in ~/.config/nvidia/api.key.${NC}"
+echo "The proxy on :8888 reads it and forwards to NVIDIA's free cloud."
+echo "pi talks to the proxy and never sees the key."
+echo
+echo "Optional persistent proxy:"
+echo "  systemctl --user enable --now $(pwd)/nvidia-proxy.service"

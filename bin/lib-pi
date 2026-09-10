@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Shared helper for buzz / buzz-code:
+#   ensure the NVIDIA proxy is running, which holds your API key so pi never
+#   sees or needs one ("apiKey: not-used"). Source this file, don't run it.
+
+set -euo pipefail
+
+PROXY_URL="${NVIDIA_PROXY_URL:-http://127.0.0.1:8888}"
+
+ensure_proxy() {
+  local proxy_dir
+  if curl -sf -m 2 "$PROXY_URL/health" >/dev/null 2>&1; then
+    return 0
+  fi
+  proxy_dir="$HOME/bin/nvidia-proxy"
+  if [ ! -f "$proxy_dir/main.py" ]; then
+    local self_dir
+    self_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/nvidia-proxy" && pwd)"
+    if [ -f "$self_dir/main.py" ]; then
+      proxy_dir="$self_dir"
+    fi
+  fi
+  if [ ! -f "$proxy_dir/main.py" ]; then
+    echo "ERROR: nvidia-proxy not found. Run setup.sh first." >&2
+    exit 1
+  fi
+  if [ ! -f "$HOME/.config/nvidia/api.key" ]; then
+    echo "ERROR: no API key found. Run setup.sh (or save one to ~/.config/nvidia/api.key)." >&2
+    exit 1
+  fi
+  echo "Starting NVIDIA proxy on $PROXY_URL ..." >&2
+  (nohup python3 "$proxy_dir/main.py" >"$HOME/.config/nvidia/proxy.log" 2>&1 &)
+  local i
+  for i in $(seq 1 20); do
+    if curl -sf -m 2 "$PROXY_URL/health" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "ERROR: proxy failed to start. See $HOME/.config/nvidia/proxy.log" >&2
+  exit 1
+}

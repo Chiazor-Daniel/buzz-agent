@@ -33,6 +33,7 @@ setup.sh will:
 2. `npm install -g @earendil-works/pi-coding-agent`
 3. Copy `buzz`, `buzz-code`, `buzz-chat` into `~/bin`
 4. Ask for your **free** NVIDIA API key and save it to `~/.config/nvidia/api.key` (mode 600)
+5. Point pi's `nvidia` provider at your local key-hiding proxy
 
 Then (new terminal):
 
@@ -43,6 +44,8 @@ buzz-code "review the auth code in ./src and find security issues"
 
 buzz-chat "what is a TLS handshake?"
 ```
+
+`buzz` and `buzz-code` **auto-start the proxy** on first use (and `setup.sh` can also install it as a background service), so it really is one command — no keys to remember, nothing else to run.
 
 ## Getting the FREE API key
 
@@ -60,22 +63,40 @@ chmod 600 ~/.config/nvidia/api.key
 
 NVIDIA's free tier is rate-limited but plenty for personal coding use. No credit card.
 
-## Using the proxy (optional)
+## How the key stays hidden
 
-Expose an OpenAI-compatible endpoint on `localhost:8888` that forwards to NVIDIA:
-
-```bash
-cd ~/bin/nvidia-proxy
-python3 -m pip install -r requirements.txt
-python3 main.py
+```
+Your terminal/git repo     ~/.config/nvidia/api.key (mode 600)
+         │                            │
+         │ no key anywhere            │ only file that holds it
+         ▼                            ▼
+    pi agent ──► local proxy :8888 ──► NVIDIA free cloud
 ```
 
-Then point any OpenAI SDK at `http://127.0.0.1:8888/v1`.
+- pi is configured with `apiKey: "not-used"` and talks only to `127.0.0.1:8888`
+- the proxy (`bin/nvidia-proxy`) loads the key from `~/.config/nvidia/api.key` and forwards to `https://integrate.api.nvidia.com/v1`
+- no NVIDIA key ever appears in your shell, env, config, or repo
+
+The proxy auto-starts on demand. For a persistent background proxy on login:
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp nvidia-proxy.service ~/.config/systemd/user/
+systemctl --user enable --now nvidia-proxy
+```
+
+## Using the proxy directly (optional)
+
+The proxy also exposes an OpenAI-compatible endpoint on `localhost:8888` for any OpenAI-SDK tools:
 
 ```bash
 curl http://127.0.0.1:8888/health
 curl http://127.0.0.1:8888/v1/models
+curl http://127.0.0.1:8888/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"nvidia/nemotron-3.5-lightning-30b-a3b","messages":[{"role":"user","content":"hi"}]}'
 ```
+
+(To run it manually instead of auto-start: `python3 ~/bin/nvidia-proxy/main.py`)
 
 ## Switching models
 
