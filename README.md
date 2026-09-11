@@ -4,6 +4,8 @@
 
 buzz is a terminal coding agent with a local NVIDIA NIM proxy, so your API key never touches the agent runtime. Get a free NVIDIA cloud key, paste it once, and use buzz every day.
 
+![buzz in your terminal](screenshots/tui.png)
+
 ---
 
 ## Install (pick your OS)
