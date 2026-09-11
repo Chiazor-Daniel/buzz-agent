@@ -22,10 +22,10 @@ fi
 
 # 2. pi (the coding agent runtime)
 if ! command -v pi >/dev/null 2>&1; then
-  echo -e "${YELLOW}Installing pi coding agent...${NC}"
+  echo -e "${YELLOW}Installing the code agent engine...${NC}"
   npm install -g @earendil-works/pi-coding-agent
 else
-  echo "pi coding agent already installed."
+  echo "Code agent engine already installed."
 fi
 
 # 2b. Rebrand the installed runtime so every user-facing name is "buzz"
@@ -47,7 +47,7 @@ else:
     print("Runtime already rebranded to buzz.")
 PYEOF
 else
-  echo -e "${YELLOW}Warning: could not find pi's package.json for rebrand.${NC}"
+  echo -e "${YELLOW}Warning: could not find the engine's package.json for rebrand.${NC}"
 fi
 
 # 3. Python (needed by the proxy)
@@ -100,10 +100,10 @@ providers["nvidia"]["apiKey"] = "not-used"
 providers["nvidia"]["baseUrl"] = "http://127.0.0.1:8888/v1"
 with open(path, "w") as f:
     json.dump(data, f, indent=2, ensure_ascii=False)
-print("Pi nvidia provider -> 127.0.0.1:8888 (proxy).")
+print("nvidia provider -> 127.0.0.1:8888 (proxy).")
 PYEOF
 else
-  echo -e "${YELLOW}Note: ~/.pi/agent/models.json not found yet. It will be created when you first run 'pi' — if the proxy URL isn't set then, run setup.sh again once.${NC}"
+  echo -e "${YELLOW}Note: ~/.pi/agent/models.json not found yet. It will be created when you first run 'buzz' — if the proxy URL isn't set then, run setup.sh again once.${NC}"
 fi
 
 # 7. Buzz theme (honey/amber TUI + HTML export look) as the default theme
@@ -138,7 +138,7 @@ echo "  buzz-chat \"what is a TLS handshake?\""
 echo
 echo -e "${YELLOW}How it works: your key lives only in ~/.config/nvidia/api.key.${NC}"
 echo "The proxy on :8888 reads it and forwards to NVIDIA's free cloud."
-echo "pi talks to the proxy and never sees the key."
+echo "buzz talks to the proxy and never sees the key."
 echo
 echo "Optional persistent proxy:"
 echo "  systemctl --user enable --now $(pwd)/nvidia-proxy.service"

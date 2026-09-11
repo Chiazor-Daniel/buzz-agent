@@ -11,7 +11,7 @@ Your personal **AI coding agent** on NVIDIA's free cloud — reads your code, wr
   ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
 ```
 
-Built on the [pi coding agent](https://pi.dev) runtime, backed by:
+Every screen is branded **buzz** — the window title, the header, even the update prompt says `buzz update`. The engine is a real local coding-agent runtime, fully rebranded for you. Backed by:
 
 - **NVIDIA Nemotron Lightning** (`nemotron-3.5-lightning-30b-a3b`) — fast daily driver
 - **NVIDIA Nemotron Ultra** (`nemotron-3-ultra-550b-a55b`) — heavy lifting
@@ -63,10 +63,10 @@ cd buzz-agent
 
 setup.sh will:
 1. Install Node.js if missing
-2. `npm install -g @earendil-works/pi-coding-agent` and **rebrand it** so every screen says `buzz` (update prompt, titles)
+2. Install the agent engine and **rebrand it** so every screen says `buzz` (update prompt, titles)
 3. Copy `buzz`, `buzz-code`, `buzz-chat` into `~/bin`
 4. Ask for your **free** NVIDIA API key and save it to `~/.config/nvidia/api.key` (mode 600)
-5. Point pi's `nvidia` provider at your local key-hiding proxy
+5. Point the engine's `nvidia` provider at your local key-hiding proxy
 6. Install the **buzz theme** (honey/amber TUI + matching exported web pages) as the default
 
 Then (new terminal):
@@ -104,10 +104,10 @@ Your terminal/git repo     ~/.config/nvidia/api.key (mode 600)
          │                            │
          │ no key anywhere            │ only file that holds it
          ▼                            ▼
-    pi agent ──► local proxy :8888 ──► NVIDIA free cloud
+    buzz agent ──► local proxy :8888 ──► NVIDIA free cloud
 ```
 
-- pi is configured with `apiKey: "not-used"` and talks only to `127.0.0.1:8888`
+- buzz is configured with `apiKey: "not-used"` and talks only to `127.0.0.1:8888`
 - the proxy (`bin/nvidia-proxy`) loads the key from `~/.config/nvidia/api.key` and forwards to `https://integrate.api.nvidia.com/v1`
 - no NVIDIA key ever appears in your shell, env, config, or repo
 
@@ -138,7 +138,7 @@ Every script reads env vars, so you can override without editing anything:
 
 ```bash
 NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b" buzz-chat "hi"
-pi --provider nvidia --model "nvidia/nemotron-3.5-lightning-30b-a3b" "question"
+NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b" buzz "question"
 ```
 
 Browse all free model IDs at build.nvidia.com (copy any model's API code — the env var to set is `NVIDIA_API_KEY`).
@@ -160,5 +160,5 @@ Check the key: `head -c 20 ~/.config/nvidia/api.key` (should start `nvapi-`) and
 **Rate limited**
 Free tier caps requests/minute. Wait a bit or switch models.
 
-**`pi` says "no provider"**
-Run with explicit flags: `pi --provider nvidia --model nvidia/nemotron-3.5-lightning-30b-a3b`
+**The engine says "no provider"**
+Re-run `setup.sh` once (it configures the nvidia provider for you), or pick a model inside buzz with `/model`.
