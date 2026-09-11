@@ -84,16 +84,19 @@ rep = {
     "self works as alias to pi": "self works as alias to the agent",
     "[source|self|pi]": "[source|self|engine]",
 }
-targets = [root / "cli/args.js", root / "package-manager-cli.js"]
+targets = list((root / "cli").glob("*.js")) + list((root / "bundle").glob("**/*.js")) + list(root.glob("package-manager-cli.js"))
+seen = set()
 for f in targets:
-    if not f.is_file():
-        print(f"  (skip {f.name}: version changed)")
+    if f in seen or not f.is_file():
         continue
+    seen.add(f)
     s = f.read_text()
+    orig = s
     for a, b in rep.items():
         s = s.replace(a, b)
-    f.write_text(s)
-    print(f"  help text branded in {f.name}")
+    if s != orig:
+        f.write_text(s)
+        print(f"  help text branded in {f.relative_to(root)}")
 PYEOF
 fi
 
