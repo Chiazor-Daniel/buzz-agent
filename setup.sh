@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
-# One-shot setup for the buzz agent on any Linux box.
+# One-shot setup for the buzz agent on Linux, WSL, and macOS.
 # Install: git clone .../buzz-agent && cd buzz-agent && ./setup.sh
+#
+# Everything is installed for you: Node.js 22, Python 3, and the proxy's
+# Python packages (in a private venv). The only outside requirement is git.
 set -euo pipefail
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 # Already root (containers, some VPS)? Skip sudo entirely.
 if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
+
+# macOS vs Linux (WSL included) — both get bash scripts; only package
+# managers differ.
+if [ "$(uname -s)" = "Darwin" ]; then OS="macos"; HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/opt/homebrew}"; else OS="linux"; fi
 
 echo -e "${GREEN}==> buzz agent setup${NC}"
 
@@ -16,7 +25,15 @@ need_node() {
 }
 if ! command -v node >/dev/null 2>&1 || ! need_node; then
   echo -e "${YELLOW}Installing Node.js 22...${NC}"
-  if command -v apt-get >/dev/null 2>&1; then
+  if [ "$OS" = "macos" ]; then
+    if ! command -v brew >/dev/null 2>&1; then
+      echo "Install Homebrew first (https://brew.sh — it needs Xcode Command Line Tools), then re-run this script."
+      exit 1
+    fi
+    brew install node@22 >/dev/null
+    # node@22 is keg-only; put it on PATH for the rest of this script.
+    export PATH="$HOMEBREW_PREFIX/opt/node@22/bin:$PATH"
+  elif command -v apt-get >/dev/null 2>&1; then
     command -v curl >/dev/null 2>&1 || $SUDO apt-get install -y curl
     curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO bash - >/dev/null 2>&1
     $SUDO apt-get install -y nodejs
@@ -45,69 +62,43 @@ else
   echo "Code agent engine already installed."
 fi
 
-# 2b. Apply buzz branding so every user-facing name is "buzz"
-#     (update prompt now says 'buzz update', window title, changelog, etc.)
-PI_PKG="$(npm root -g)/@earendil-works/pi-coding-agent/package.json"
-if [ -f "$PI_PKG" ]; then
-  python3 - "$PI_PKG" <<'PYEOF'
-import json, sys
-path = sys.argv[1]
-with open(path) as f:
-    data = json.load(f)
-cfg = data.setdefault("piConfig", {})
-if cfg.get("name") != "buzz":
-    cfg["name"] = "buzz"
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    print("Buzz branding applied to the engine.")
-else:
-    print("Buzz branding already applied.")
-PYEOF
-else
-  echo -e "${YELLOW}Warning: could not find the engine's package.json for branding.${NC}"
-fi
-
-# 2c. Scrub the last visible "pi" mentions from the engine's built-in help
-#     ("buzz update [source|self|pi]  Update pi, extensions, ..." -> engine/buzz)
-ENGINE_DIST="$(npm root -g)/@earendil-works/pi-coding-agent/dist"
-if [ -d "$ENGINE_DIST" ]; then
-  python3 - "$ENGINE_DIST" <<'PYEOF'
-import sys, pathlib
-root = pathlib.Path(sys.argv[1])
-rep = {
-    "Update pi, extensions, or model catalogs": "Update the engine, extensions, or model catalogs",
-    "Update pi, installed packages, or model catalogs.": "Update the engine, installed packages, or model catalogs.",
-    "Update pi only": "Update the agent only",
-    "update pi only": "update the agent only",
-    "Update pi and installed packages": "Update the agent and installed packages",
-    "Update pi and all extensions": "Update the agent and all extensions",
-    "self works as alias to pi": "self works as alias to the agent",
-    "[source|self|pi]": "[source|self|engine]",
-}
-targets = list((root / "cli").glob("*.js")) + list((root / "bundle").glob("**/*.js")) + list(root.glob("package-manager-cli.js"))
-seen = set()
-for f in targets:
-    if f in seen or not f.is_file():
-        continue
-    seen.add(f)
-    s = f.read_text()
-    orig = s
-    for a, b in rep.items():
-        s = s.replace(a, b)
-    if s != orig:
-        f.write_text(s)
-        print(f"  help text branded in {f.relative_to(root)}")
-PYEOF
-fi
-
-# 3. Python (needed by the proxy)
+# 3. Python 3 (needed by the key-hiding proxy) — install it if missing, then
+#    create a private venv with the proxy's packages so we never touch the
+#    system Python or trip PEP 668 "externally-managed" protections.
 if ! command -v python3 >/dev/null 2>&1; then
-  echo "Install python3, then re-run this script."
-  exit 1
+  echo -e "${YELLOW}Installing Python 3...${NC}"
+  if [ "$OS" = "macos" ]; then
+    brew install python3 >/dev/null
+  elif command -v apt-get >/dev/null 2>&1; then
+    $SUDO apt-get update -qq && $SUDO apt-get install -y python3 python3-venv python3-pip
+  elif command -v dnf >/dev/null 2>&1; then
+    $SUDO dnf install -y python3 python3-pip
+  else
+    echo "Install Python 3 from https://python.org then re-run this script."
+    exit 1
+  fi
 fi
 
-# 4. Copy scripts into ~/bin
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV="$HOME/.buzz-proxy-venv"
+PY="python3"
+if [ ! -x "$VENV/bin/python" ]; then
+  echo -e "${YELLOW}Setting up the proxy's Python environment...${NC}"
+  if ! python3 -m venv "$VENV" >/dev/null 2>&1; then
+    echo -e "${YELLOW}venv unavailable — installing proxy packages into user site-packages instead (no venv).${NC}"
+    python3 -m pip install --user --break-system-packages -q --disable-pip-version-check -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt" 2>/dev/null \
+      || python3 -m pip install --user -q --disable-pip-version-check -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt"
+  fi
+fi
+if [ -x "$VENV/bin/python" ]; then
+  PY="$VENV/bin/python"
+  "$PY" -m pip install -q --disable-pip-version-check -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt"
+fi
+echo "Proxy Python environment ready."
+
+# 4. Apply buzz branding + scrub the engine's built-in help text
+$PY "$SCRIPT_DIR/bin/brand-engine.py"
+
+# 5. Copy scripts into ~/bin
 mkdir -p "$HOME/bin"
 for f in buzz buzz-code buzz-chat lib-pi; do
   cp "$SCRIPT_DIR/bin/$f" "$HOME/bin/$f"
@@ -117,7 +108,7 @@ mkdir -p "$HOME/bin/nvidia-proxy"
 cp "$SCRIPT_DIR/bin/nvidia-proxy"/* "$HOME/bin/nvidia-proxy/"
 echo -e "${GREEN}==> Scripts installed to ~/bin${NC}"
 
-# 5. NVIDIA API key
+# 6. NVIDIA API key
 KEY_FILE="$HOME/.config/nvidia/api.key"
 if [ ! -f "$KEY_FILE" ]; then
   echo -e "${YELLOW}NVIDIA API key not found.${NC}"
@@ -133,51 +124,14 @@ else
   echo "Key already present at $KEY_FILE."
 fi
 
-# 6. Point pi's nvidia provider at the local key-hiding proxy
-#    The proxy loads the key from ~/.config/nvidia/api.key, so the agent never
-#    needs the key itself ("apiKey: not-used") — no key in env, config, or shell.
-PI_MODELS="$HOME/.pi/agent/models.json"
-if [ -f "$PI_MODELS" ]; then
-  python3 - "$PI_MODELS" <<'PYEOF'
-import json, sys, time
-path = sys.argv[1]
-with open(path) as f:
-    data = json.load(f)
-providers = data.setdefault("providers", {})
-providers.setdefault("nvidia", {})
-providers["nvidia"]["api"] = "openai-completions"
-providers["nvidia"]["apiKey"] = "not-used"
-providers["nvidia"]["baseUrl"] = "http://127.0.0.1:8888/v1"
-with open(path, "w") as f:
-    json.dump(data, f, indent=2, ensure_ascii=False)
-print("nvidia provider -> 127.0.0.1:8888 (proxy).")
-PYEOF
-else
-  echo -e "${YELLOW}Note: ~/.pi/agent/models.json not found yet. It will be created when you first run 'buzz' — if the proxy URL isn't set then, run setup.sh again once.${NC}"
-fi
-
 # 7. Buzz theme (honey/amber TUI + HTML export look) as the default theme
 THEMES_DIR="$HOME/.pi/agent/themes"
 mkdir -p "$THEMES_DIR"
 cp "$SCRIPT_DIR/theme/buzz.json" "$THEMES_DIR/buzz.json"
 echo -e "${GREEN}==> Installed buzz theme${NC}"
 
-PI_SETTINGS="$HOME/.pi/agent/settings.json"
-if [ -f "$PI_SETTINGS" ]; then
-  python3 - "$PI_SETTINGS" <<'PYEOF'
-import json, sys
-path = sys.argv[1]
-with open(path) as f:
-    data = json.load(f)
-if data.get("theme") != "buzz":
-    data["theme"] = "buzz"
-    with open(path, "w") as f:
-        json.dump(data, f, indent=2)
-    print("Default theme set to buzz.")
-PYEOF
-else
-  echo -e "${YELLOW}Note: settings.json not found yet. On first run, type: /theme buzz${NC}"
-fi
+# 8. Point engine at the proxy and set default theme
+$PY "$SCRIPT_DIR/bin/configure-engine.py"
 
 echo -e "${GREEN}==> Done! Reopen your terminal (or 'source ~/.profile').${NC}"
 echo
@@ -190,5 +144,9 @@ echo -e "${YELLOW}How it works: your key lives only in ~/.config/nvidia/api.key.
 echo "The proxy on :8888 reads it and forwards to NVIDIA's free cloud."
 echo "buzz talks to the proxy and never sees the key."
 echo
-echo "Optional persistent proxy:"
-echo "  systemctl --user enable --now $SCRIPT_DIR/nvidia-proxy.service"
+if [ "$OS" = "linux" ]; then
+  echo "Optional persistent proxy:"
+  echo "  systemctl --user enable --now $SCRIPT_DIR/nvidia-proxy.service"
+else
+  echo "The proxy auto-starts with every 'buzz' command (no service needed on macOS)."
+fi

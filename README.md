@@ -1,92 +1,79 @@
-# buzz
+# buzz agent
 
-A full **AI coding agent** that lives in your terminal. It reads your code, edits files, runs commands, fixes bugs, and keeps working until the job is done — powered by NVIDIA's free cloud. No GPU, no paid API, no web tab.
+> Your coding agent. Your key. Your terminal. Free cloud inference.
 
----
-
-## What you'll see
-
-Run `buzz`, and this is what shows up — a full interactive terminal UI:
-
-![buzz TUI](screenshots/tui.png)
-
-Every screen is branded **buzz**: the window title, the header, even the update prompt says `buzz update`. The default look is a honey-and-amber theme (switch themes any time with `/theme`).
+buzz wraps the [pi coding agent](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) with a local NVIDIA NIM proxy so your API key never touches the agent runtime. Get a free NVIDIA cloud key, paste it once, and use buzz every day.
 
 ---
 
-## Quick start
+## Install (pick your OS)
+
+**Zero manual installs** — setup downloads Node.js 22, Python 3, and all proxy dependencies for you. You only need **git** and an internet connection.
+
+| OS | Method | One-liner |
+|---|---|---|
+| Linux / Ubuntu / Debian / Fedora / WSL | setup.sh | `git clone https://github.com/Chiazor-Daniel/buzz-agent && cd buzz-agent && ./setup.sh` |
+| macOS | setup.sh | Install [Homebrew](https://brew.sh) first, then the same line above. |
+| Windows (native) | setup.ps1 | `git clone https://github.com/Chiazor-Daniel/buzz-agent; cd buzz-agent; powershell -ExecutionPolicy Bypass -File .\bin\setup.ps1` |
+| Windows (WSL) | setup.sh | Install [WSL](https://aka.ms/installwsl), install Ubuntu inside it, then the Linux one-liner. |
+
+> **macOS note:** Homebrew is required (it installs Xcode Command Line Tools, Node, and Python automatically). One-time setup: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+
+> **Windows native note:** Windows 11 ships with winget (used by setup.ps1). On Windows 10, install [App Installer](https://aka.ms/getwinget) from the Store first.
+
+---
+
+## Just type buzz
 
 ```bash
-git clone https://github.com/Chiazor-Daniel/buzz-agent
-cd buzz-agent
-./setup.sh
+buzz "write a hello world in Python"
+buzz-code "find the bug in main.py"
+buzz-chat "what is a TLS handshake?"
 ```
 
-That's it. Setup installs the agent, and asks you for one free NVIDIA key:
-
-1. Get it at **https://build.nvidia.com** (free account, no credit card)
-2. Open any model page → **Get API Key** → copy the `nvapi-...` value
-3. Paste it when setup asks (or save it later: `echo "nvapi-..." > ~/.config/nvidia/api.key`)
-
-Then open a **new terminal**, go to any project folder, and type `buzz`.
+Works from any project folder — buzz is a normal CLI command.
 
 ---
 
-## Use it
+## Your key is yours
 
-In **any project folder**, just type:
+buzz never logs, exports, or shares your NVIDIA key.
 
-```bash
-buzz
 ```
-
-That's it — the agent loads, reads the folder, and you talk to it like a teammate. Give it a goal and it works until it's done:
-
-```bash
-buzz "add dark mode to src/App.css, then run the test suite"
-buzz "fix the bug in the checkout flow"
-buzz "write tests for the API routes"
+~/.config/nvidia/api.key          ← only the proxy reads this (chmod 600)
+~/.buzz-proxy-venv/               ← proxy's Python packages (isolated)
+~/.pi/agent/models.json           ← provider set to proxy on :8888 (apiKey = "not-used")
+buzz → proxy on :8888 → NVIDIA cloud    ← your key stays on disk, never in the agent
 ```
-
-Other entry points:
-
-| Command | Use it for |
-|---|---|
-| `buzz` (just typing it) | launch the agent on the current folder |
-| `buzz-code` | heavy lifting — big refactors, hard bugs |
-| `buzz-chat "..."` | quick questions, no agent overhead |
-
-`buzz` and `buzz-code` auto-start everything on first use — one command, nothing else to run.
 
 ---
-
-## How your key stays hidden
-
-Your key is the only secret, and it never leaves your machine:
-
-```
-buzz agent ──► local proxy ──► NVIDIA free cloud
-                 ▲
-          ~/.config/nvidia/api.key   (the only place the key exists)
-```
-
-buzz talks to a tiny local proxy on `localhost:8888`, which reads the key and forwards to NVIDIA. The key never appears in your shell, env, config, or this repo. Free-tier is rate-limited but plenty for personal coding.
-
----
-
-## Good to know
-
-- **Sessions** — buzz remembers the conversation (`/continue`, `/resume`) so you can pick up where you left off.
-- **Other models** — `NVIDIA_MODEL="nvidia/..." buzz "hi"` switches models; browse free model IDs at build.nvidia.com.
-- **Skip the banner** — `BUZZ_NO_BANNER=1 buzz "hi"`.
 
 ## Troubleshooting
 
-**`buzz: command not found`**
-Open a new terminal. If it still fails, make sure `~/bin` is on your PATH.
+**buzz: command not found**
+Your shell hasn't picked up `~/bin` yet. Reopen your terminal or run:
+```bash
+export PATH="$HOME/bin:$PATH"
+```
+On Windows, setup.ps1 adds `~/bin` to your PATH automatically — close and reopen your terminal.
 
-**`401` / Unauthorized**
-Your key is wrong or truncated: `head -c 20 ~/.config/nvidia/api.key` should start with `nvapi-`. Regenerate at build.nvidia.com if needed.
+**proxy failed to start**
+Check the key exists: `ls -l ~/.config/nvidia/api.key`. If it's missing, re-run setup.
 
-**Rate limited**
-Free tier caps requests per minute. Wait a few seconds and retry.
+**npm errors on Linux (EACCES / EPERM)**
+Fix npm's global prefix:
+```bash
+npm config set prefix ~/.npm-global
+echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+```
+Then re-run setup.sh.
+
+**macOS: "xcode-select: note: install requested for Xcode Command Line Tools"**
+Run `xcode-select --install` if prompted during setup, then re-run setup.sh.
+
+**"Your API key was rejected (HTTP 403)"**
+Regenerate your key at https://build.nvidia.com and paste it again:
+```bash
+nano ~/.config/nvidia/api.key
+```

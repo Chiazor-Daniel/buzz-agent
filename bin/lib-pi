@@ -63,7 +63,11 @@ ensure_proxy() {
   if [ -t 2 ]; then
     echo "${DIM}starting key-hiding proxy on ${PROXY_URL} ...${NC}" >&2
   fi
-  (nohup python3 "$proxy_dir/main.py" >"$HOME/.config/nvidia/proxy.log" 2>&1 &)
+  local py="python3"
+  if [ -x "$HOME/.buzz-proxy-venv/bin/python" ]; then
+    py="$HOME/.buzz-proxy-venv/bin/python"
+  fi
+  (nohup "$py" "$proxy_dir/main.py" >"$HOME/.config/nvidia/proxy.log" 2>&1 &)
   local i
   for i in $(seq 1 20); do
     if curl -sf -m 2 "$PROXY_URL/health" >/dev/null 2>&1; then
