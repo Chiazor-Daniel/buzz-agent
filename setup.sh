@@ -10,17 +10,28 @@ if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
 echo -e "${GREEN}==> buzz agent setup${NC}"
 
-# 1. Node.js (required by pi)
-if ! command -v node >/dev/null 2>&1; then
-  echo -e "${YELLOW}Installing Node.js...${NC}"
-  if command -v dnf >/dev/null 2>&1; then
+# 1. Node.js 22.19+ (required by the engine; Ubuntu's apt ships 18, which is too old)
+need_node() {
+  node -e "const p=process.versions.node.split('.').map(Number); process.exit(p[0]>22||(p[0]===22&&p[1]>=19)?0:1)" 2>/dev/null
+}
+if ! command -v node >/dev/null 2>&1 || ! need_node; then
+  echo -e "${YELLOW}Installing Node.js 22...${NC}"
+  if command -v apt-get >/dev/null 2>&1; then
+    command -v curl >/dev/null 2>&1 || $SUDO apt-get install -y curl
+    curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO bash - >/dev/null 2>&1
+    $SUDO apt-get install -y nodejs
+  elif command -v dnf >/dev/null 2>&1; then
     $SUDO dnf install -y nodejs npm
-  elif command -v apt-get >/dev/null 2>&1; then
-    $SUDO apt update && $SUDO apt install -y nodejs npm
+    if ! need_node; then
+      command -v curl >/dev/null 2>&1 || $SUDO dnf install -y curl
+      curl -fsSL https://rpm.nodesource.com/setup_22.x | $SUDO bash - >/dev/null 2>&1
+      $SUDO dnf install -y nodejs
+    fi
   else
-    echo "Install Node.js from https://nodejs.org then re-run this script."
+    echo "Install Node.js 22+ from https://nodejs.org then re-run this script."
     exit 1
   fi
+  need_node || { echo "${RED}Node.js is still too old — install Node 22+ from https://nodejs.org and re-run.${NC}"; exit 1; }
 fi
 
 # 2. pi (the coding agent runtime)
