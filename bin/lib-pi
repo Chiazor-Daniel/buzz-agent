@@ -16,6 +16,8 @@ is_subcommand() {
   case "${1:-}" in
     update|install|remove|uninstall|list|config|auth|show|get|set|onboard)
       return 0 ;;
+    -h|--help|-V|--version)
+      return 0 ;;
   esac
   return 1
 }

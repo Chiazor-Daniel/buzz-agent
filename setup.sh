@@ -67,6 +67,36 @@ else
   echo -e "${YELLOW}Warning: could not find the engine's package.json for branding.${NC}"
 fi
 
+# 2c. Scrub the last visible "pi" mentions from the engine's built-in help
+#     ("buzz update [source|self|pi]  Update pi, extensions, ..." -> engine/buzz)
+ENGINE_DIST="$(npm root -g)/@earendil-works/pi-coding-agent/dist"
+if [ -d "$ENGINE_DIST" ]; then
+  python3 - "$ENGINE_DIST" <<'PYEOF'
+import sys, pathlib
+root = pathlib.Path(sys.argv[1])
+rep = {
+    "Update pi, extensions, or model catalogs": "Update the engine, extensions, or model catalogs",
+    "Update pi, installed packages, or model catalogs.": "Update the engine, installed packages, or model catalogs.",
+    "Update pi only": "Update the agent only",
+    "update pi only": "update the agent only",
+    "Update pi and installed packages": "Update the agent and installed packages",
+    "Update pi and all extensions": "Update the agent and all extensions",
+    "self works as alias to pi": "self works as alias to the agent",
+    "[source|self|pi]": "[source|self|engine]",
+}
+targets = [root / "cli/args.js", root / "package-manager-cli.js"]
+for f in targets:
+    if not f.is_file():
+        print(f"  (skip {f.name}: version changed)")
+        continue
+    s = f.read_text()
+    for a, b in rep.items():
+        s = s.replace(a, b)
+    f.write_text(s)
+    print(f"  help text branded in {f.name}")
+PYEOF
+fi
+
 # 3. Python (needed by the proxy)
 if ! command -v python3 >/dev/null 2>&1; then
   echo "Install python3, then re-run this script."
