@@ -123,7 +123,7 @@ if [ ! -f "$KEY_FILE" ]; then
   echo -e "${YELLOW}NVIDIA API key not found.${NC}"
   echo "1. Get a FREE key at: https://build.nvidia.com"
   echo "   (pick any model -> 'Get API Key' -> copy the nvapi-... value)"
-  read -r -p "2. Paste your key: " KEY
+  read -r -p "2. Paste your key: " KEY || KEY=""
   [ -n "$KEY" ] || { echo "No key entered. Aborting (re-run when ready)."; exit 1; }
   mkdir -p "$HOME/.config/nvidia"
   printf '%s\n' "$KEY" > "$KEY_FILE"
