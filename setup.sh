@@ -191,4 +191,4 @@ echo "The proxy on :8888 reads it and forwards to NVIDIA's free cloud."
 echo "buzz talks to the proxy and never sees the key."
 echo
 echo "Optional persistent proxy:"
-echo "  systemctl --user enable --now $(pwd)/nvidia-proxy.service"
+echo "  systemctl --user enable --now $SCRIPT_DIR/nvidia-proxy.service"

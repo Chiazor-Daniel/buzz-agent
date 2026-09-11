@@ -37,7 +37,7 @@ def main():
     max_tokens = int(os.environ.get("NVIDIA_MAX_TOKENS", "1024"))
 
     if len(sys.argv) < 2:
-        print("Usage: nvidia-chat \"your question here\"")
+        print("Usage: buzz-chat \"your question here\"")
         print(f"Model: {model}")
         sys.exit(1)
 
@@ -69,7 +69,18 @@ def main():
             data = json.loads(resp.read().decode("utf-8"))
             print(data["choices"][0]["message"]["content"])
     except urllib.error.HTTPError as e:
-        print(f"HTTP Error {e.code}: {e.read().decode('utf-8')}")
+        body = e.read().decode("utf-8")
+        try:
+            detail = json.loads(body).get("detail", body)
+        except json.JSONDecodeError:
+            detail = body
+        detail = str(detail).strip()[:300]
+        if e.code in (401, 403):
+            print(f"ERROR: NVIDIA rejected your API key (HTTP {e.code}: {detail})")
+            print("  Fix: regenerate a key at https://build.nvidia.com and update")
+            print(f"  {API_KEY_PATH} (or set $NVIDIA_API_KEY).")
+        else:
+            print(f"NVIDIA API error {e.code}: {detail}")
         sys.exit(1)
     except Exception as e:
         print(f"Error: {e}")
