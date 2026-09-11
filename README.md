@@ -28,29 +28,33 @@ That's it. Setup installs the agent, and asks you for one free NVIDIA key:
 2. Open any model page → **Get API Key** → copy the `nvapi-...` value
 3. Paste it when setup asks (or save it later: `echo "nvapi-..." > ~/.config/nvidia/api.key`)
 
+Then open a **new terminal**, go to any project folder, and type `buzz`.
+
 ---
 
 ## Use it
 
-Open a **new terminal** (so `buzz` is on your PATH) and go:
+In **any project folder**, just type:
+
+```bash
+buzz
+```
+
+That's it — the agent loads, reads the folder, and you talk to it like a teammate. Give it a goal and it works until it's done:
 
 ```bash
 buzz "add dark mode to src/App.css, then run the test suite"
+buzz "fix the bug in the checkout flow"
+buzz "write tests for the API routes"
 ```
 
-```bash
-buzz-code "find the security holes in ./src/auth and fix them"
-```
+Other entry points:
 
-```bash
-buzz-chat "what is a TLS handshake?"
-```
-
-| Command | Model | Good for |
-|---|---|---|
-| `buzz` | Nemotron Lightning (30B) | everyday coding, fast |
-| `buzz-code` | Nemotron Ultra (550B) | hard problems, big refactors |
-| `buzz-chat` | Lightning | quick questions, no agent overhead |
+| Command | Use it for |
+|---|---|
+| `buzz` (just typing it) | launch the agent on the current folder |
+| `buzz-code` | heavy lifting — big refactors, hard bugs |
+| `buzz-chat "..."` | quick questions, no agent overhead |
 
 `buzz` and `buzz-code` auto-start everything on first use — one command, nothing else to run.
 
