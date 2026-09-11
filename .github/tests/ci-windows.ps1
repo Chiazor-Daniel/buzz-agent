@@ -89,3 +89,4 @@ if ($out -match "no API key found") { Pass "W6 guard" } else { Fail "W6: $out" }
 Write-Host ""
 Write-Host "RESULT: $script:PASS passed, $script:FAIL failed"
 if ($script:FAIL -gt 0) { exit 1 }
+exit 0
