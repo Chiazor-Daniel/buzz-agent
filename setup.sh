@@ -81,18 +81,39 @@ fi
 
 VENV="$HOME/.buzz-proxy-venv"
 PY="python3"
-if [ ! -x "$VENV/bin/python" ]; then
-  echo -e "${YELLOW}Setting up the proxy's Python environment...${NC}"
-  if ! python3 -m venv "$VENV" >/dev/null 2>&1; then
-    echo -e "${YELLOW}venv unavailable — installing proxy packages into user site-packages instead (no venv).${NC}"
-    python3 -m pip install --user --break-system-packages -q --disable-pip-version-check -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt" 2>/dev/null \
-      || python3 -m pip install --user -q --disable-pip-version-check -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt"
+
+ensure_pip_if_missing() {
+  python3 -m pip --version >/dev/null 2>&1 && return 0
+  echo -e "${YELLOW}Installing Python pip...${NC}"
+  if [ "$OS" = "macos" ]; then
+    brew install python3 >/dev/null 2>&1
+  elif command -v apt-get >/dev/null 2>&1; then
+    $SUDO apt-get install -y python3-venv python3-pip >/dev/null 2>&1
+  else
+    $SUDO dnf install -y python3-pip >/dev/null 2>&1
   fi
-fi
-if [ -x "$VENV/bin/python" ]; then
-  PY="$VENV/bin/python"
-  "$PY" -m pip install -q --disable-pip-version-check -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt"
-fi
+}
+
+make_proxy_python() {
+  if [ ! -x "$VENV/bin/python" ]; then
+    python3 -m venv "$VENV" >/dev/null 2>&1 \
+      || { ensure_pip_if_missing; python3 -m venv "$VENV" >/dev/null 2>&1 || true; }
+  fi
+  if [ -x "$VENV/bin/python" ]; then
+    "$VENV/bin/python" -m pip install -q --disable-pip-version-check \
+      -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt" >/dev/null \
+      && { PY="$VENV/bin/python"; return; }
+  fi
+  # No venv possible — use user site-packages (with the PEP 668 escape hatch).
+  python3 -m pip install --user -q --disable-pip-version-check \
+      -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt" >/dev/null 2>&1 \
+    || python3 -m pip install --user --break-system-packages -q --disable-pip-version-check \
+      -r "$SCRIPT_DIR/bin/nvidia-proxy/requirements.txt" >/dev/null 2>&1 \
+    || true
+}
+
+echo -e "${YELLOW}Setting up the proxy's Python environment...${NC}"
+make_proxy_python
 echo "Proxy Python environment ready."
 
 # 4. Apply buzz branding + scrub the engine's built-in help text
