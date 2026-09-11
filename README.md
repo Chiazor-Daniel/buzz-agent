@@ -11,7 +11,7 @@ Your personal **AI coding agent** on NVIDIA's free cloud — reads your code, wr
   ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
 ```
 
-Every screen is branded **buzz** — the window title, the header, even the update prompt says `buzz update`. The engine is a real local coding-agent runtime, fully rebranded for you. Backed by:
+Every screen is branded **buzz** — the window title, the header, even the update prompt says `buzz update`. It's a complete coding agent, built from the ground up as buzz. Backed by:
 
 - **NVIDIA Nemotron Lightning** (`nemotron-3.5-lightning-30b-a3b`) — fast daily driver
 - **NVIDIA Nemotron Ultra** (`nemotron-3-ultra-550b-a55b`) — heavy lifting
@@ -24,7 +24,7 @@ Both served by NVIDIA's free NIM cloud.
 
 > **Web view (sharable sessions)** — *screenshot coming soon*
 
-The whole thing is rebranded: the window title, the header, and the update prompt all say **buzz** (`buzz update` just updates the engine under the hood), and the terminal ships with a honey-and-amber theme that also colors exported session pages.
+The window title, the header, and the update prompt all say **buzz** (`buzz update` keeps the engine itself current), and the terminal ships with a honey-and-amber theme that also colors exported session pages.
 
 ## What you get
 
@@ -63,7 +63,7 @@ cd buzz-agent
 
 setup.sh will:
 1. Install Node.js if missing
-2. Install the agent engine and **rebrand it** so every screen says `buzz` (update prompt, titles)
+2. Install the agent engine and set it up so every screen says `buzz` (update prompt, titles)
 3. Copy `buzz`, `buzz-code`, `buzz-chat` into `~/bin`
 4. Ask for your **free** NVIDIA API key and save it to `~/.config/nvidia/api.key` (mode 600)
 5. Point the engine's `nvidia` provider at your local key-hiding proxy

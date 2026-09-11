@@ -28,7 +28,7 @@ else
   echo "Code agent engine already installed."
 fi
 
-# 2b. Rebrand the installed runtime so every user-facing name is "buzz"
+# 2b. Apply buzz branding so every user-facing name is "buzz"
 #     (update prompt now says 'buzz update', window title, changelog, etc.)
 PI_PKG="$(npm root -g)/@earendil-works/pi-coding-agent/package.json"
 if [ -f "$PI_PKG" ]; then
@@ -42,12 +42,12 @@ if cfg.get("name") != "buzz":
     cfg["name"] = "buzz"
     with open(path, "w") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
-    print("Rebranded runtime: APP_NAME -> buzz.")
+    print("Buzz branding applied to the engine.")
 else:
-    print("Runtime already rebranded to buzz.")
+    print("Buzz branding already applied.")
 PYEOF
 else
-  echo -e "${YELLOW}Warning: could not find the engine's package.json for rebrand.${NC}"
+  echo -e "${YELLOW}Warning: could not find the engine's package.json for branding.${NC}"
 fi
 
 # 3. Python (needed by the proxy)
