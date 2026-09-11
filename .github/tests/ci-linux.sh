@@ -7,6 +7,9 @@ PASS=0; FAIL=0
 ok()  { echo "  PASS: $1"; PASS=$((PASS+1)); }
 bad() { echo "  FAIL: $1"; FAIL=$((FAIL+1)); }
 
+# macOS ships no GNU coreutils 'timeout' — use perl for the same job timeout.
+run_t() { perl -e 'alarm shift; exec @ARGV' "$@"; }
+
 KEY="nvapi-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
 # ── macOS: force the Homebrew Node path ────────────────────────────────────────
@@ -68,7 +71,7 @@ for i in $(seq 1 20); do
 done
 curl -sf -m 2 http://127.0.0.1:8888/health >/dev/null 2>&1 && ok "C5 proxy healthy" || { bad "C5 proxy dead"; cat /tmp/proxy.log; }
 
-RESP=$(timeout 60 buzz-chat "hi" 2>&1)
+RESP=$(run_t 60 buzz-chat "hi" 2>&1)
 echo "$RESP" | grep -q "rejected your API key" && ok "C5 friendly 403" || bad "C5 403 output: $(echo "$RESP" | tail -3)"
 
 # ── C6: missing-key guard fires before agent starts ────────────────────────────
@@ -76,7 +79,7 @@ echo "$RESP" | grep -q "rejected your API key" && ok "C5 friendly 403" || bad "C
 KF="$HOME/.config/nvidia/api.key"
 if [ -f "$KF" ]; then
   mv "$KF" "$KF.bak"
-  MISSING=$(timeout 30 buzz "ignored" 2>&1 || true)
+  MISSING=$(run_t 30 buzz "ignored" 2>&1 || true)
   mv "$KF.bak" "$KF"
   echo "$MISSING" | grep -q "no API key found" && ok "C6 missing-key guard" || bad "C6 guard: $(echo "$MISSING" | head -3)"
 fi

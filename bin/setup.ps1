@@ -12,6 +12,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $SCRIPT_DIR = Split-Path -Parent $MyInvocation.MyCommand.Path
+$REPO = Split-Path -Parent $SCRIPT_DIR   # script lives in bin/, repo is parent
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -85,24 +86,24 @@ if (-not (Test-Path $VENV_PYTHON)) {
     python -m venv $VENV
     if ($LASTEXITCODE -ne 0) {
         Write-Host "venv failed. Installing proxy packages into user site-packages instead." -ForegroundColor Yellow
-        python -m pip install --user -q -r (Join-Path $SCRIPT_DIR "bin\nvidia-proxy\requirements.txt")
+        python -m pip install --user -q -r (Join-Path $REPO "bin\nvidia-proxy\requirements.txt")
     }
 }
 
 if (Test-Path $VENV_PYTHON) {
-    & $VENV_PYTHON -m pip install -q --disable-pip-version-check -r (Join-Path $SCRIPT_DIR "bin\nvidia-proxy\requirements.txt")
+    & $VENV_PYTHON -m pip install -q --disable-pip-version-check -r (Join-Path $REPO "bin\nvidia-proxy\requirements.txt")
 }
 Write-Host "Proxy Python environment ready."
 
 # ── 4. branding + help-text scrub ────────────────────────────────────────────
 
-& python (Join-Path $SCRIPT_DIR "bin\brand-engine.py")
+& python (Join-Path $REPO "bin\brand-engine.py")
 
 # ── 5. copy scripts + proxy into ~/bin ────────────────────────────────────────
 
 $BIN = Join-Path $HOME "bin"
 New-Item -ItemType Directory -Force $BIN | Out-Null
-Copy-Item "$SCRIPT_DIR\bin\*" -Destination $BIN -Recurse -Force
+Copy-Item "$REPO\bin\*" -Destination $BIN -Recurse -Force
 Write-Host "==> Scripts installed to $BIN" -ForegroundColor Green
 
 # Make sure ~/bin is on this user's PATH.
@@ -140,10 +141,10 @@ if (-not (Test-Path $KEY_FILE)) {
 
 $THEMES = Join-Path $HOME ".pi\agent\themes"
 New-Item -ItemType Directory -Force $THEMES | Out-Null
-Copy-Item (Join-Path $SCRIPT_DIR "theme\buzz.json") (Join-Path $THEMES "buzz.json") -Force
+Copy-Item (Join-Path $REPO "theme\buzz.json") (Join-Path $THEMES "buzz.json") -Force
 Write-Host "==> Installed buzz theme" -ForegroundColor Green
 
-& $VENV_PYTHON (Join-Path $SCRIPT_DIR "bin\configure-engine.py")
+& $VENV_PYTHON (Join-Path $REPO "bin\configure-engine.py")
 
 # ── done ──────────────────────────────────────────────────────────────────────
 
