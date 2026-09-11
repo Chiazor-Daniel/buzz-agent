@@ -20,8 +20,8 @@ Both served by NVIDIA's free NIM cloud.
 
 > ## Screenshots
 >
-> **Terminal (buzz TUI)** — *screenshot coming soon*
->
+> **Terminal (buzz TUI):** ![buzz TUI](screenshots/tui.png)
+
 > **Web view (sharable sessions)** — *screenshot coming soon*
 
 The whole thing is rebranded: the window title, the header, and the update prompt all say **buzz** (`buzz update` just updates the engine under the hood), and the terminal ships with a honey-and-amber theme that also colors exported session pages.
