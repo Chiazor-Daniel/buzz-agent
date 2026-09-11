@@ -127,7 +127,7 @@ for f in buzz buzz-code buzz-chat lib-pi; do
   chmod +x "$HOME/bin/$f"
 done
 mkdir -p "$HOME/bin/nvidia-proxy"
-cp "$SCRIPT_DIR/bin/nvidia-proxy"/* "$HOME/bin/nvidia-proxy/"
+cp -r "$SCRIPT_DIR/bin/nvidia-proxy"/* "$HOME/bin/nvidia-proxy/"
 echo -e "${GREEN}==> Scripts installed to ~/bin${NC}"
 
 # 6. NVIDIA API key
@@ -136,7 +136,10 @@ if [ ! -f "$KEY_FILE" ]; then
   echo -e "${YELLOW}NVIDIA API key not found.${NC}"
   echo "1. Get a FREE key at: https://build.nvidia.com"
   echo "   (pick any model -> 'Get API Key' -> copy the nvapi-... value)"
-  read -r -p "2. Paste your key: " KEY || KEY=""
+  KEY="${BUZZ_SETUP_KEY:-}"
+  if [ -z "$KEY" ]; then
+    read -r -p "2. Paste your key: " KEY || KEY=""
+  fi
   [ -n "$KEY" ] || { echo "No key entered. Aborting (re-run when ready)."; exit 1; }
   mkdir -p "$HOME/.config/nvidia"
   printf '%s\n' "$KEY" > "$KEY_FILE"

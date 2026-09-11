@@ -120,7 +120,8 @@ if (-not (Test-Path $KEY_FILE)) {
     Write-Host "NVIDIA API key not found." -ForegroundColor Yellow
     Write-Host "1. Get a FREE key at: https://build.nvidia.com"
     Write-Host "   (pick any model -> 'Get API Key' -> copy the nvapi-... value)"
-    $KEY = Read-Host "2. Paste your key"
+    $KEY = $env:BUZZ_SETUP_KEY
+    if (-not $KEY) { $KEY = Read-Host "2. Paste your key" }
     if (-not $KEY) {
         Write-Host "No key entered. Aborting (re-run setup.ps1 when ready)."
         exit 1
