@@ -5,15 +5,18 @@ set -euo pipefail
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 
+# Already root (containers, some VPS)? Skip sudo entirely.
+if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
+
 echo -e "${GREEN}==> buzz agent setup${NC}"
 
 # 1. Node.js (required by pi)
 if ! command -v node >/dev/null 2>&1; then
   echo -e "${YELLOW}Installing Node.js...${NC}"
   if command -v dnf >/dev/null 2>&1; then
-    sudo dnf install -y nodejs npm
+    $SUDO dnf install -y nodejs npm
   elif command -v apt-get >/dev/null 2>&1; then
-    sudo apt update && sudo apt install -y nodejs npm
+    $SUDO apt update && $SUDO apt install -y nodejs npm
   else
     echo "Install Node.js from https://nodejs.org then re-run this script."
     exit 1
