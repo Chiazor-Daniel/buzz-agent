@@ -26,6 +26,13 @@ function Ensure-Proxy {
     $proxyUrl = "http://127.0.0.1:8888"
     if ($env:NVIDIA_PROXY_URL) { $proxyUrl = $env:NVIDIA_PROXY_URL }
 
+    # Guard first: no key file means re-run setup, never silently reuse a proxy.
+    $keyFile = Join-Path $HOME ".config\nvidia\api.key"
+    if (-not (Test-Path $keyFile)) {
+        Write-Host "ERROR: no API key found. Run setup.ps1 (or save one to $keyFile)." -ForegroundColor Red
+        exit 1
+    }
+
     try {
         $r = Invoke-WebRequest -Uri "$proxyUrl/health" -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop
         if ($r.StatusCode -eq 200) { return }
@@ -37,12 +44,6 @@ function Ensure-Proxy {
     }
     if (-not (Test-Path (Join-Path $proxyDir "main.py"))) {
         Write-Host "ERROR: nvidia-proxy not found. Run setup.ps1 first." -ForegroundColor Red
-        exit 1
-    }
-
-    $keyFile = Join-Path $HOME ".config\nvidia\api.key"
-    if (-not (Test-Path $keyFile)) {
-        Write-Host "ERROR: no API key found. Run setup.ps1 (or save one to $keyFile)." -ForegroundColor Red
         exit 1
     }
 

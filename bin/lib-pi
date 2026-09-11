@@ -40,7 +40,12 @@ EOF
 }
 
 ensure_proxy() {
-  local proxy_dir
+  local proxy_dir py
+  # Guard first: no key file means re-run setup, never silently reuse a proxy.
+  if [ ! -f "$HOME/.config/nvidia/api.key" ]; then
+    echo "${RED}ERROR: no API key found. Run setup.sh (or save one to ~/.config/nvidia/api.key).${NC}" >&2
+    exit 1
+  fi
   if curl -sf -m 2 "$PROXY_URL/health" >/dev/null 2>&1; then
     return 0
   fi
@@ -56,14 +61,10 @@ ensure_proxy() {
     echo "ERROR: nvidia-proxy not found. Run setup.sh first." >&2
     exit 1
   fi
-  if [ ! -f "$HOME/.config/nvidia/api.key" ]; then
-    echo "${RED}ERROR: no API key found. Run setup.sh (or save one to ~/.config/nvidia/api.key).${NC}" >&2
-    exit 1
-  fi
   if [ -t 2 ]; then
     echo "${DIM}starting key-hiding proxy on ${PROXY_URL} ...${NC}" >&2
   fi
-  local py="python3"
+  py="python3"
   if [ -x "$HOME/.buzz-proxy-venv/bin/python" ]; then
     py="$HOME/.buzz-proxy-venv/bin/python"
   fi
