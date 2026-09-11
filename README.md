@@ -2,7 +2,7 @@
 
 > Your coding agent. Your key. Your terminal. Free cloud inference.
 
-buzz wraps the [pi coding agent](https://www.npmjs.com/package/@earendil-works/pi-coding-agent) with a local NVIDIA NIM proxy so your API key never touches the agent runtime. Get a free NVIDIA cloud key, paste it once, and use buzz every day.
+buzz is a terminal coding agent with a local NVIDIA NIM proxy, so your API key never touches the agent runtime. Get a free NVIDIA cloud key, paste it once, and use buzz every day.
 
 ---
 
