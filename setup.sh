@@ -15,7 +15,7 @@ if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
 
 # macOS vs Linux (WSL included) — both get bash scripts; only package
 # managers differ.
-if [ "$(uname -s)" = "Darwin" ]; then OS="macos"; HOMEBREW_PREFIX="${HOMEBREW_PREFIX:-/opt/homebrew}"; else OS="linux"; fi
+if [ "$(uname -s)" = "Darwin" ]; then OS="macos"; else OS="linux"; fi
 
 echo -e "${GREEN}==> buzz agent setup${NC}"
 
@@ -31,8 +31,9 @@ if ! command -v node >/dev/null 2>&1 || ! need_node; then
       exit 1
     fi
     brew install node@22 >/dev/null
-    # node@22 is keg-only; put it on PATH for the rest of this script.
-    export PATH="$HOMEBREW_PREFIX/opt/node@22/bin:$PATH"
+    # node@22 is keg-only; resolve its real prefix before calling it on PATH
+    # (works on both Apple Silicon /opt/homebrew and Intel /usr/local).
+    export PATH="$(brew --prefix node@22)/bin:$PATH"
   elif command -v apt-get >/dev/null 2>&1; then
     command -v curl >/dev/null 2>&1 || $SUDO apt-get install -y curl
     curl -fsSL https://deb.nodesource.com/setup_22.x | $SUDO bash - >/dev/null 2>&1
