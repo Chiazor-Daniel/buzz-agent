@@ -3,7 +3,7 @@
 # Install: git clone .../buzz-agent && cd buzz-agent && ./setup.sh
 set -euo pipefail
 
-GREEN='\033[0;32m'; YELLOW='\033[1;33m'; NC='\033[0m'
+GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; NC='\033[0m'
 
 echo -e "${GREEN}==> buzz agent setup${NC}"
 
@@ -23,7 +23,10 @@ fi
 # 2. pi (the coding agent runtime)
 if ! command -v pi >/dev/null 2>&1; then
   echo -e "${YELLOW}Installing the code agent engine...${NC}"
-  npm install -g @earendil-works/pi-coding-agent
+  if ! npm install -g @earendil-works/pi-coding-agent --no-audit --no-fund --no-progress >/dev/null 2>"$HOME/.buzz-engine-install.log"; then
+    echo "${RED}Engine install failed. See $HOME/.buzz-engine-install.log${NC}"
+    exit 1
+  fi
 else
   echo "Code agent engine already installed."
 fi
