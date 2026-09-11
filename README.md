@@ -1,59 +1,20 @@
-# buzz agent
+# buzz
 
-Your personal **AI coding agent** on NVIDIA's free cloud — reads your code, writes files, runs commands, fixes bugs, reviews PRs, and refactors whole projects. No local GPU, no paid API, no infra. Just a Linux box + one free key.
+A full **AI coding agent** that lives in your terminal. It reads your code, edits files, runs commands, fixes bugs, and keeps working until the job is done — powered by NVIDIA's free cloud. No GPU, no paid API, no web tab.
 
-```
-  ██████╗ ██╗   ██╗███████╗███████╗
-  ██╔══██╗██║   ██║╚══███╔╝╚══███╔╝   your AI coding agent
-  ██████╔╝██║   ██║  ███╔╝   ███╔╝     engine: NVIDIA Nemotron
-  ██╔══██╗██║   ██║ ███╔╝   ███╔╝      tools: read bash edit write
-  ██████╔╝╚██████╔╝███████╗███████╗
-  ╚═════╝  ╚═════╝ ╚══════╝╚══════╝
-```
+---
 
-Every screen is branded **buzz** — the window title, the header, even the update prompt says `buzz update`. It's a complete coding agent, built from the ground up as buzz. Backed by:
+## What you'll see
 
-- **NVIDIA Nemotron Lightning** (`nemotron-3.5-lightning-30b-a3b`) — fast daily driver
-- **NVIDIA Nemotron Ultra** (`nemotron-3-ultra-550b-a55b`) — heavy lifting
+Run `buzz`, and this is what shows up — a full interactive terminal UI:
 
-Both served by NVIDIA's free NIM cloud.
+![buzz TUI](screenshots/tui.png)
 
-> ## Screenshots
->
-> **Terminal (buzz TUI):** ![buzz TUI](screenshots/tui.png)
+Every screen is branded **buzz**: the window title, the header, even the update prompt says `buzz update`. The default look is a honey-and-amber theme (switch themes any time with `/theme`).
 
-> **Web view (sharable sessions)** — *screenshot coming soon*
+---
 
-The window title, the header, and the update prompt all say **buzz** (`buzz update` keeps the engine itself current), and the terminal ships with a honey-and-amber theme that also colors exported session pages.
-
-## What you get
-
-It's a full coding agent, not a chatbot. Give it a goal; it works until the task is done.
-
-| Command | Uses | Good for |
-|---|---|---|
-| `buzz` | Nemotron Lightning (30B) | everyday coding, fast iteration |
-| `buzz-code` | Nemotron Ultra (550B) | hard problems, big refactors |
-| `buzz-chat "..."` | Lightning (default) | quick answers, no agent overhead |
-| `bin/nvidia-proxy` | any NVIDIA model | OpenAI-compatible endpoint (`localhost:8888`) |
-
-### The agent's tools (real work, not chat)
-
-- **read** / **grep** / **find** / **ls** — explores your codebase
-- **edit** / **write** — changes code in your project
-- **bash** — runs commands, builds, tests, git
-
-so you can say:
-
-```bash
-buzz "add dark mode to src/App.css and update the toggle in App.js, then run the test suite"
-buzz-code "./src/auth is a mess — find the security holes, fix them, and write tests"
-buzz "setup a new express + sqlite project in ./blog and scaffold the models, routes, and migrations"
-```
-
-It keeps a **session**, so you can continue a conversation across restarts (`/continue`, `/resume`) and ask follow-ups on the same task. Full interactive terminal UI — themes, colors, inline diffs.
-
-## Quick start (3 steps)
+## Quick start
 
 ```bash
 git clone https://github.com/Chiazor-Daniel/buzz-agent
@@ -61,104 +22,67 @@ cd buzz-agent
 ./setup.sh
 ```
 
-setup.sh will:
-1. Install Node.js if missing
-2. Install the agent engine and set it up so every screen says `buzz` (update prompt, titles)
-3. Copy `buzz`, `buzz-code`, `buzz-chat` into `~/bin`
-4. Ask for your **free** NVIDIA API key and save it to `~/.config/nvidia/api.key` (mode 600)
-5. Point the engine's `nvidia` provider at your local key-hiding proxy
-6. Install the **buzz theme** (honey/amber TUI + matching exported web pages) as the default
+That's it. Setup installs the agent, and asks you for one free NVIDIA key:
 
-Then (new terminal):
+1. Get it at **https://build.nvidia.com** (free account, no credit card)
+2. Open any model page → **Get API Key** → copy the `nvapi-...` value
+3. Paste it when setup asks (or save it later: `echo "nvapi-..." > ~/.config/nvidia/api.key`)
+
+---
+
+## Use it
+
+Open a **new terminal** (so `buzz` is on your PATH) and go:
 
 ```bash
-buzz "add an /api/health route to ./server and a test for it"
+buzz "add dark mode to src/App.css, then run the test suite"
+```
 
-buzz-code "find the performance bottleneck in ./src and fix it"
+```bash
+buzz-code "find the security holes in ./src/auth and fix them"
+```
 
+```bash
 buzz-chat "what is a TLS handshake?"
 ```
 
-`buzz` and `buzz-code` **auto-start the proxy** on first use (and `setup.sh` can also install it as a background service), so it really is one command — no keys to remember, nothing else to run. Skip the banner with `BUZZ_NO_BANNER=1`.
+| Command | Model | Good for |
+|---|---|---|
+| `buzz` | Nemotron Lightning (30B) | everyday coding, fast |
+| `buzz-code` | Nemotron Ultra (550B) | hard problems, big refactors |
+| `buzz-chat` | Lightning | quick questions, no agent overhead |
 
-## Getting the FREE API key
+`buzz` and `buzz-code` auto-start everything on first use — one command, nothing else to run.
 
-1. Go to **https://build.nvidia.com**
-2. Create a free account
-3. Open any model page and click **Get API Key**
-4. Copy the `nvapi-...` value
-5. Either paste it during setup.sh, or save it manually:
+---
 
-```bash
-mkdir -p ~/.config/nvidia
-echo "nvapi-YOUR-KEY-HERE" > ~/.config/nvidia/api.key
-chmod 600 ~/.config/nvidia/api.key
-```
+## How your key stays hidden
 
-NVIDIA's free tier is rate-limited but plenty for personal coding use. No credit card.
-
-## How the key stays hidden
+Your key is the only secret, and it never leaves your machine:
 
 ```
-Your terminal/git repo     ~/.config/nvidia/api.key (mode 600)
-         │                            │
-         │ no key anywhere            │ only file that holds it
-         ▼                            ▼
-    buzz agent ──► local proxy :8888 ──► NVIDIA free cloud
+buzz agent ──► local proxy ──► NVIDIA free cloud
+                 ▲
+          ~/.config/nvidia/api.key   (the only place the key exists)
 ```
 
-- buzz is configured with `apiKey: "not-used"` and talks only to `127.0.0.1:8888`
-- the proxy (`bin/nvidia-proxy`) loads the key from `~/.config/nvidia/api.key` and forwards to `https://integrate.api.nvidia.com/v1`
-- no NVIDIA key ever appears in your shell, env, config, or repo
+buzz talks to a tiny local proxy on `localhost:8888`, which reads the key and forwards to NVIDIA. The key never appears in your shell, env, config, or this repo. Free-tier is rate-limited but plenty for personal coding.
 
-The proxy auto-starts on demand. For a persistent background proxy on login:
+---
 
-```bash
-mkdir -p ~/.config/systemd/user
-cp nvidia-proxy.service ~/.config/systemd/user/
-systemctl --user enable --now nvidia-proxy
-```
+## Good to know
 
-## Using the proxy directly (optional)
-
-The proxy also exposes an OpenAI-compatible endpoint on `localhost:8888` for any OpenAI-SDK tools:
-
-```bash
-curl http://127.0.0.1:8888/health
-curl http://127.0.0.1:8888/v1/models
-curl http://127.0.0.1:8888/v1/chat/completions -H 'Content-Type: application/json' \
-  -d '{"model":"nvidia/nemotron-3.5-lightning-30b-a3b","messages":[{"role":"user","content":"hi"}]}'
-```
-
-(To run it manually instead of auto-start: `python3 ~/bin/nvidia-proxy/main.py`)
-
-## Switching models
-
-Every script reads env vars, so you can override without editing anything:
-
-```bash
-NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b" buzz-chat "hi"
-NVIDIA_MODEL="nvidia/nemotron-3-super-120b-a12b" buzz "question"
-```
-
-Browse all free model IDs at build.nvidia.com (copy any model's API code — the env var to set is `NVIDIA_API_KEY`).
-
-## Security notes
-
-- **Never commit your key.** `.gitignore` excludes `*.key` / `api.key`. Keys are read from `$NVIDIA_API_KEY` or `~/.config/nvidia/api.key`, never from the repo.
-- Your key grants free-tier access only (rate-limited), but treat it like a password anyway.
-- If you think a key leaked (committed, pasted in chat, etc.) — regenerate it at build.nvidia.com.
+- **Sessions** — buzz remembers the conversation (`/continue`, `/resume`) so you can pick up where you left off.
+- **Other models** — `NVIDIA_MODEL="nvidia/..." buzz "hi"` switches models; browse free model IDs at build.nvidia.com.
+- **Skip the banner** — `BUZZ_NO_BANNER=1 buzz "hi"`.
 
 ## Troubleshooting
 
 **`buzz: command not found`**
-Reopen your terminal (npm global bin may need PATH refresh): `npm prefix -g` → add its `/bin` to PATH. Also confirm `setup.sh` copied the scripts to `~/bin` and `~/bin` is on PATH.
+Open a new terminal. If it still fails, make sure `~/bin` is on your PATH.
 
-**`401` / `Unauthorized`**
-Check the key: `head -c 20 ~/.config/nvidia/api.key` (should start `nvapi-`) and that there's no trailing-newline issue. Regenerate if needed.
+**`401` / Unauthorized**
+Your key is wrong or truncated: `head -c 20 ~/.config/nvidia/api.key` should start with `nvapi-`. Regenerate at build.nvidia.com if needed.
 
 **Rate limited**
-Free tier caps requests/minute. Wait a bit or switch models.
-
-**The engine says "no provider"**
-Re-run `setup.sh` once (it configures the nvidia provider for you), or pick a model inside buzz with `/model`.
+Free tier caps requests per minute. Wait a few seconds and retry.
